@@ -1,0 +1,201 @@
+---
+title: "Programming in Base R: Blood Pressure Analysis"
+format: html
+author: "Alex Devoid" 
+date: "May 28, 2024"
+purpose: "ST558-HW2"
+ 
+---
+
+## Basic Vector Practice
+
+## Task 1: Basic Vector Practice
+### 1 . Create vectors
+```{r}
+
+# Pre-treatment blood pressure values
+pre_treatment <- c(130, 128, 116, 124, 133, 134, 118, 126, 114, 127, 141, 138, 128, 140, 137, 131, 120, 128, 139, 135)
+
+# Post-treatment blood pressure values
+post_treatment <- c(114, 98, 113, 99, 107, 116, 113, 111, 119, 117, 101, 119, 130, 122, 106, 106, 124, 102, 117, 113)
+```
+###2. Assign names to the vector elements using the paste() function
+```{r}
+names(pre_treatment) <- paste("Subject", 1:20, sep = "_")
+names(post_treatment) <- paste("Subject", 1:20, sep = "_")
+```
+### 3. Calculate the change in blood pressure for each patient
+```{r}
+bp_change <- pre_treatment - post_treatment
+print(bp_change)
+```
+### 4. Calculate the average decrease in blood pressure across all patients
+```{r}
+average_decrease <- mean(bp_change)
+print(average_decrease)
+```
+### 5. Determine which patients experienced a decrease in blood pressure after treatment
+```{r}
+positive_change_indices <- which(bp_change > 0)
+print(positive_change_indices)
+```
+### 6. Subset the vector of differences to only return those that have a positive change
+```{r}
+positive_changes <- bp_change[positive_change_indices]
+print(positive_changes)
+```
+### 7. Calculate the average decrease in blood pressure for those where the blood pressure decreased
+```{r}
+average_positive_decrease <- mean(positive_changes)
+print(average_positive_decrease)
+```
+
+## Task 2: Basic Vector Practice
+### 1. Create a data frame object
+```{r}
+bp_data <- data.frame(
+  patient = paste("Subject", 1:20, sep = "_"),
+  pre_bp = pre_treatment,
+  post_bp = post_treatment,
+  diff_bp = bp_change
+)
+```
+### 2. Create a data frame object
+```{r}
+negative_diff_bp <- subset(bp_data, diff_bp < 0)
+print(negative_diff_bp)
+```
+### 3. Add a new column to the data frame
+```{r}
+bp_data$post_bp_less_than_120 <- bp_data$post_bp < 120
+```
+### 4. Print the data frame out nicely
+```{r}
+knitr::kable(bp_data)
+```
+## Task 3: List practice
+### 1. Create a new data frame with placebo data
+```{r}
+# Placebo pre-treatment blood pressure values
+placebo_pre_treatment <- c(138, 135, 147, 117, 152, 134, 114, 121, 131, 130)
+
+# Placebo post-treatment blood pressure values
+placebo_post_treatment <- c(105, 136, 123, 130, 134, 143, 135, 139, 120, 124)
+
+# Calculate the change in blood pressure for each patient
+placebo_bp_change <- placebo_pre_treatment - placebo_post_treatment
+
+# Create data frame
+placebo_data <- data.frame(
+  patient = paste("Subject", 1:10, sep = "_"),
+  pre_bp = placebo_pre_treatment,
+  post_bp = placebo_post_treatment,
+  diff_bp = placebo_bp_change
+)
+
+# Add new column
+placebo_data$post_bp_less_than_120 <- placebo_data$post_bp < 120
+print(placebo_data)
+
+```
+### 2. Create and store a list with two elements
+```{R}
+bp_list <- list(
+  treatment = bp_data,
+  placebo = placebo_data
+)
+
+```
+### 3. Access the first list element using three different types of syntax
+```{R}
+print(bp_list[[1]])  # double square brackets with index
+print(bp_list$treatment)  # the $ operator
+print(bp_list[["treatment"]])  # double square brackets with name
+
+```
+### 4. In one line, access the placebo data frame, pre_bp column
+```{R}
+print(bp_list$placebo$pre_bp)
+```
+## Task 4: Control Flow Practice
+### 1. Create a new column status in each data frame
+```{R}
+bp_list$treatment$status <- character(nrow(bp_list$treatment))
+bp_list$placebo$status <- character(nrow(bp_list$placebo))
+
+```
+### 2. Create a for loop and use if/then/else logic for the status column in the treatment data frame
+```{R}
+for (i in seq_len(nrow(bp_list$treatment))) {
+  if (bp_list$treatment$post_bp[i] <= 120) {
+    bp_list$treatment$status[i] <- "Optimal"
+  } else if (bp_list$treatment$post_bp[i] <= 130) {
+    bp_list$treatment$status[i] <- "Borderline"
+  } else {
+    bp_list$treatment$status[i] <- "High"
+  }
+}
+print(bp_list$treatment)
+
+```
+### 3. Create a for loop and use if/then/else logic for the status column in the placebo data frame
+```{R}
+for (i in seq_len(nrow(bp_list$placebo))) {
+  if (bp_list$placebo$post_bp[i] <= 120) {
+    bp_list$placebo$status[i] <- "Optimal"
+  } else if (bp_list$placebo$post_bp[i] <= 130) {
+    bp_list$placebo$status[i] <- "Borderline"
+  } else {
+    bp_list$placebo$status[i] <- "High"
+  }
+}
+print(bp_list$placebo)
+
+```
+## Task 5: Function Writing
+### 1. Write a function to summarize data frames in a list
+```{R}
+bp_summary <- function(bp_list, stat = "mean") {
+  # Get the function from the quoted string
+  my_fun <- get(stat)
+  
+  # Calculate the statistics
+  treatment_pre <- my_fun(bp_list$treatment$pre_bp)
+  treatment_post <- my_fun(bp_list$treatment$post_bp)
+  treatment_diff <- my_fun(bp_list$treatment$diff_bp)
+  
+  placebo_pre <- my_fun(bp_list$placebo$pre_bp)
+  placebo_post <- my_fun(bp_list$placebo$post_bp)
+  placebo_diff <- my_fun(bp_list$placebo$diff_bp)
+  
+  # Create a named list of the results
+  result <- list(
+    treatment_pre = treatment_pre, 
+    treatment_post = treatment_post, 
+    treatment_diff = treatment_diff,
+    placebo_pre = placebo_pre, 
+    placebo_post = placebo_post, 
+    placebo_diff = placebo_diff
+  )
+  
+  names(result) <- c(
+    paste0("treatment_pre_", stat),
+    paste0("treatment_post_", stat),
+    paste0("treatment_diff_", stat),
+    paste0("placebo_pre_", stat),
+    paste0("placebo_post_", stat),
+    paste0("placebo_diff_", stat)
+  )
+  
+  return(result)
+}
+# Apply the function to the list of data frames
+print(bp_summary(bp_list))
+print(bp_summary(bp_list, stat = "var"))
+print(bp_summary(bp_list, stat = "sd"))
+print(bp_summary(bp_list, stat = "min"))
+print(bp_summary(bp_list, stat = "max"))
+
+```
+
+
